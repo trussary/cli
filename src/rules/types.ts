@@ -139,8 +139,26 @@ export interface ScanContext {
 
 /** Rate-limited, allowlisted HTTP client — the only way a rule touches the network. */
 export interface SafeHttpClient {
-  get(url: string): Promise<SafeHttpResponse>;
-  head(url: string): Promise<SafeHttpResponse>;
+  get(url: string, opts?: SafeRequestOptions): Promise<SafeHttpResponse>;
+  head(url: string, opts?: SafeRequestOptions): Promise<SafeHttpResponse>;
+  /**
+   * The one request that carries a credential: the app's own anon key, read
+   * from its own source, sent to its own Supabase project. Deliberately a
+   * separate method rather than free-form headers, so every credential-bearing
+   * request in this tool is visible at one call site.
+   */
+  getWithAnonKey(url: string, anonKey: string): Promise<SafeHttpResponse>;
+  /** The origin the user asserted ownership of. */
+  targetOrigin(): string;
+}
+
+export interface SafeRequestOptions {
+  /**
+   * Optional probes (anything beyond the fixed diagnostic allowlist) obey
+   * robots.txt. The fixed paths do not — they are the equivalent of the owner
+   * opening their own site in a browser.
+   */
+  optional?: boolean;
 }
 
 export interface SafeHttpResponse {

@@ -19,6 +19,10 @@ import { bundle as noRateLimitAuth } from './rules/no-rate-limit-auth.js';
 import { bundle as sqlStringInterpolation } from './rules/sql-string-interpolation.js';
 import { bundle as writeEndpointNoValidation } from './rules/write-endpoint-no-validation.js';
 import { bundle as lockfileMissing } from './rules/lockfile-missing.js';
+import { bundle as gitExposed } from './rules/git-exposed.js';
+import { bundle as envExposed } from './rules/env-exposed.js';
+import { bundle as securityHeaders } from './rules/security-headers.js';
+import { bundle as supabaseAnonReadable } from './rules/supabase-anon-readable.js';
 
 /**
  * Every rule's message bundle, keyed by rule id.
@@ -45,4 +49,8 @@ export const ruleBundles: Record<string, RuleBundle> = {
   'sql-string-interpolation': sqlStringInterpolation,
   'write-endpoint-no-validation': writeEndpointNoValidation,
   'lockfile-missing': lockfileMissing,
+  'git-exposed': gitExposed,
+  'env-exposed': envExposed,
+  'security-headers': securityHeaders,
+  'supabase-anon-readable': supabaseAnonReadable,
 };

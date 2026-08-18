@@ -19,6 +19,10 @@ import { noRateLimitAuth } from './money-abuse/no-rate-limit-auth.js';
 import { sqlStringInterpolation } from './input/sql-string-interpolation.js';
 import { writeEndpointNoValidation } from './input/write-endpoint-no-validation.js';
 import { lockfileMissing } from './deploy/lockfile-missing.js';
+import { gitExposedLive } from './secrets/git-exposed.live.js';
+import { envExposedLive } from './secrets/env-exposed.live.js';
+import { securityHeadersLive } from './deploy/security-headers.live.js';
+import { supabaseAnonReadableLive } from './data-access/supabase-anon-readable.live.js';
 
 /**
  * The rule catalog. Adding a rule: one import + one line here,
@@ -51,6 +55,12 @@ export const rules: Rule[] = [
   sqlStringInterpolation,
   writeEndpointNoValidation,
   lockfileMissing,
+  // live — each of these needs --url plus --i-own-this-site, and nothing else
+  // in this list can open a socket at a site
+  gitExposedLive,
+  envExposedLive,
+  securityHeadersLive,
+  supabaseAnonReadableLive,
 ];
 
 export const knownRuleIds: ReadonlySet<string> = new Set(rules.map((r) => r.id));
