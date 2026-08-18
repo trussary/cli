@@ -23,8 +23,15 @@ describe('secrets-in-client-bundle', () => {
     for (const f of findings) {
       if (f.evidence.kind !== 'file') continue;
       expect(f.evidence.excerpt).not.toContain('9xQv2LmTn4Rb8Kd6Wc1Ye3Zh5Ug7Aj0PfSd');
-      expect(f.evidence.excerpt).toContain('redacted');
     }
+    // The branch that matched an actual key value redacts it; the branch that
+    // matched a variable NAME shows the line, because the name is the finding.
+    const literal = findings.find((f) => at(f).startsWith('app/components/Chat.tsx'));
+    expect(literal?.evidence.kind === 'file' && literal.evidence.excerpt).toContain('redacted');
+    const byName = findings.find((f) => at(f).startsWith('app/lib/supabase.ts'));
+    expect(byName?.evidence.kind === 'file' && byName.evidence.excerpt).toContain(
+      'NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY',
+    );
   });
 
   it('flags a NEXT_PUBLIC_ env var whose name says SERVICE_ROLE', async () => {

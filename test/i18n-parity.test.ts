@@ -2,9 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { ruleBundles } from '../src/i18n/catalog.js';
 import { engineMessages } from '../src/i18n/messages.js';
 import { rules } from '../src/rules/registry.js';
-import { LOCALES, type RuleMessages } from '../src/i18n/types.js';
+import { LOCALES } from '../src/i18n/types.js';
 
-const FIELDS: (keyof Omit<RuleMessages, 'notes'>)[] = ['title', 'why', 'how', 'check', 'fixedWhen'];
+const FIELDS = ['title', 'why', 'how', 'check', 'fixedWhen'] as const;
+
+/** Present or absent is a choice; present in one locale only is a gap. */
+const OPTIONAL_FIELDS = ['beforeApplying', 'doNotApplyIf'] as const;
 
 function placeholders(s: string): string[] {
   return [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1] as string).sort();
@@ -52,6 +55,21 @@ describe('i18n parity', () => {
         const en = placeholders(bundle.en[field]);
         const vi = placeholders(bundle.vi[field]);
         if (en.join(',') !== vi.join(',')) gaps.push(`${id}.${field}: en[${en}] vs vi[${vi}]`);
+      }
+    }
+    expect(gaps).toEqual([]);
+  });
+
+  it('optional fix-block copy is written in both locales or neither', () => {
+    const gaps: string[] = [];
+    for (const [id, bundle] of Object.entries(ruleBundles)) {
+      for (const field of OPTIONAL_FIELDS) {
+        const en = bundle.en[field];
+        const vi = bundle.vi[field];
+        if (Boolean(en) !== Boolean(vi)) gaps.push(`${id}.${field}`);
+        if (en && vi && placeholders(en).join(',') !== placeholders(vi).join(',')) {
+          gaps.push(`${id}.${field} placeholders`);
+        }
       }
     }
     expect(gaps).toEqual([]);

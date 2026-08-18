@@ -24,6 +24,9 @@ function gitTrackedFiles(root: string): Set<string> | undefined {
       encoding: 'utf8',
       timeout: 10_000,
       windowsHide: true,
+      // git complains to stderr when this is not a repository; that is an
+      // answer, not an error the user should have to read.
+      stdio: ['ignore', 'pipe', 'ignore'],
     });
     return new Set(out.split('\n').filter(Boolean));
   } catch {

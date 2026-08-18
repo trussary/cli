@@ -5,7 +5,7 @@ export const bundle: RuleBundle = {
     title: 'Files uploaded to "{bucket}" are readable by anyone with the link',
     why: 'The bucket {bucket} is created public in {file}. Every file in it is a plain URL — no login, no expiry — and those URLs are usually easy to guess from a user id or a file name. That is fine for a logo and serious for anything a user uploaded about themselves.',
     how: 'Make the bucket private and serve its files through signed URLs that expire (createSignedUrl), plus storage policies that say who may read what. Keep a separate public bucket for genuinely public assets if you need one.',
-    check: 'Open one of the uploaded files in a private browser window where you are not logged in. If it loads, that file is public to the whole internet — including to anyone who guesses a neighbouring file name.',
+    check: 'Open one of the uploaded files’ URLs in a private browser window where you are not logged in. If it loads, that file is public to the whole internet — including to anyone who guesses a neighbouring file name.',
     fixedWhen: 'Opening a file URL from that bucket while signed out returns an error, and your app still shows the file to the person who owns it — through a signed URL, not a public one.',
   },
   vi: {

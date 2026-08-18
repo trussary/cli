@@ -4,8 +4,8 @@ export const bundle: RuleBundle = {
   en: {
     title: 'Anyone on the internet can spend your AI credits through this endpoint',
     why: 'The handler in {file} (line {line}) calls a paid model API and never checks who is calling — {limiter}. Endpoints like this get found by automated scanners within days of going live, and the first sign is usually the bill, not an outage. The people doing it are not attacking you; they are reselling your credits.',
-    how: 'Require a signed-in user at the top of the handler and refuse everything else. Then add a per-user limit — a number of requests per minute and a cap on how long a prompt may be — and set a spending limit in your model provider dashboard as the backstop that works even when the code is wrong.',
-    check: 'Sign out, then send a request to that endpoint from a terminal or a private browser window. If you get a model answer back, so does everyone else. Also open your provider usage dashboard and look for traffic at hours you were asleep.',
+    how: 'Require a signed-in user at the top of the handler and refuse everything else. Then add a per-user limit — a number of requests per minute and a cap on how long a prompt may be — and set a spending limit in your model provider’s dashboard as the backstop that works even when the code is wrong.',
+    check: 'Sign out, then send a request to that endpoint from a terminal or a private browser window. If you get a model answer back, so does everyone else. Also open your provider’s usage dashboard and look for traffic at hours you were asleep.',
     fixedWhen: 'The endpoint refuses requests that carry no session, a signed-in user hits a limit after a sensible number of requests, and your provider account has a hard spending cap set.',
   },
   vi: {

@@ -7,6 +7,7 @@ export const bundle: RuleBundle = {
     how: 'Generate a long random value — 32 bytes or more, from a real random source, not typed by hand — put it in a server-only environment variable, and remove the literal from your code. Everyone signed in now will be signed out when the secret changes, which is the intended effect.',
     check: 'Open the file and read the secret. If you could say it out loud to someone and they could remember it, it is guessable — and every list a guesser would try starts with exactly these words.',
     fixedWhen: 'The secret exists only as an environment variable on the server, its value is long and random, and the old value appears nowhere in your code or your git history.',
+    beforeApplying: 'Changing the secret invalidates every token already issued, so everyone signed in is signed out at once. Pick a quiet moment, and tell people if that matters to them.',
   },
   vi: {
     title: 'Token đăng nhập của bạn được ký bằng một secret dễ đoán',
@@ -14,5 +15,6 @@ export const bundle: RuleBundle = {
     how: 'Sinh một giá trị ngẫu nhiên đủ dài — từ 32 byte trở lên, lấy từ nguồn ngẫu nhiên thật, không phải tự gõ ra — đặt vào environment variable chỉ dùng ở server, và xoá literal khỏi code. Mọi người đang đăng nhập sẽ bị đăng xuất khi secret đổi, đó là điều đúng như mong đợi.',
     check: 'Mở file ra và đọc secret. Nếu bạn có thể đọc to cho ai đó nghe và họ nhớ được thì nó dễ đoán — và mọi danh sách mà người đi đoán sẽ thử đều bắt đầu bằng đúng những từ này.',
     fixedWhen: 'Secret chỉ tồn tại dưới dạng environment variable trên server, giá trị dài và ngẫu nhiên, còn giá trị cũ không còn xuất hiện ở bất kỳ đâu trong code hay trong git history.',
+    beforeApplying: 'Đổi secret sẽ vô hiệu mọi token đã phát, nên tất cả người đang đăng nhập sẽ bị đăng xuất cùng lúc. Hãy chọn lúc vắng, và báo trước cho người dùng nếu điều đó ảnh hưởng tới họ.',
   },
 };

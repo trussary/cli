@@ -3,7 +3,7 @@ import type { RuleBundle } from '../types.js';
 export const bundle: RuleBundle = {
   en: {
     title: 'This page checks who you are in the browser, after the data has arrived',
-    why: 'In {file} (line {line}) the page loads, asks the browser whether someone is signed in, and sends them to the login page if not. The redirect happens in the visitor own browser — which they control. Anyone can stop it, and the data the page already fetched is in the network tab either way. Hiding a button is not a permission check.',
+    why: 'In {file} (line {line}) the page loads, asks the browser whether someone is signed in, and sends them to the login page if not. The redirect happens in the visitor’s own browser — which they control. Anyone can stop it, and the data the page already fetched is in the network tab either way. Hiding a button is not a permission check.',
     how: 'Move the check to the server: fetch the data in a server component, route handler or loader that verifies the session first, so the browser never receives anything a signed-out visitor should not have. Keep the redirect as well — it is good for the experience, just not as the protection.',
     check: 'Sign out. Open the protected page and immediately open devtools → Network before the redirect finishes. If you can see the real data in a response, the page never protected it. This one is worth doing by hand — we can only see the shape of the code, not what it returns.',
     fixedWhen: 'With no session, the network responses for that page contain no private data at all — not merely a page that redirects a moment after showing up.',

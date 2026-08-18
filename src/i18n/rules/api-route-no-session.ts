@@ -6,7 +6,7 @@ export const bundle: RuleBundle = {
     why: 'Nothing in {file} checks for a signed-in user before it {action}. Your app may only call this endpoint from a page behind a login, but the endpoint itself is a URL on the open internet: anyone can call it directly, with no browser, no button and no login.',
     how: 'Get the current user at the top of the handler and stop early when there is not one. With Supabase that is a getUser() call on a server client; with NextAuth or Clerk it is the server-side session helper. Then also make sure the query only returns that user rows — the check and the filter are two different jobs.',
     check: 'Sign out, then open the endpoint URL directly in your browser (or use a private window). If you get data back rather than an error, the endpoint is answering strangers.',
-    fixedWhen: 'Calling the endpoint with no session returns an authorisation error and no data, and calling it as one signed-in user returns only that user own rows.',
+    fixedWhen: 'Calling the endpoint with no session returns an authorisation error and no data, and calling it as one signed-in user returns only that user’s own rows.',
   },
   vi: {
     title: 'Một API endpoint có hành vi {action} nhưng không hề hỏi ai đang gọi',

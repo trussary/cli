@@ -7,6 +7,7 @@ export const bundle: RuleBundle = {
     how: 'Run an install once locally and commit the lockfile it produces ({names}) alongside package.json. Then check that every package in package.json is one you meant to add — search each unfamiliar name on npmjs.com and look at its age and download count before trusting it.',
     check: 'Look at the file list in your project folder for a lockfile. If there is none, ask yourself where each package in package.json came from — anything you do not recognise is worth searching for by name.',
     fixedWhen: 'A lockfile is committed to the repository, a fresh clone plus install produces the same versions you have now, and every dependency is one you recognise.',
+    beforeApplying: 'Generating a lockfile now records whatever versions resolve today, which may not be the versions you tested months ago. Install, run the app, and check the main flows before committing it.',
     notes: {
       'none-found': 'no lockfile in this project — looked for {names}',
     },
@@ -17,6 +18,7 @@ export const bundle: RuleBundle = {
     how: 'Chạy install một lần ở máy và commit lockfile sinh ra ({names}) cùng với package.json. Sau đó rà lại xem mọi package trong package.json có đúng là do bạn chủ ý thêm không — tên nào lạ thì tìm trên npmjs.com, xem tuổi đời và lượt download trước khi tin.',
     check: 'Nhìn danh sách file trong thư mục project xem có lockfile không. Nếu không có, hãy tự hỏi từng package trong package.json đến từ đâu — cái nào bạn không nhận ra thì nên tra tên.',
     fixedWhen: 'Lockfile đã được commit vào repository, clone mới rồi install ra đúng những phiên bản bạn đang có, và mọi dependency đều là thứ bạn nhận ra.',
+    beforeApplying: 'Tạo lockfile bây giờ sẽ ghi lại đúng những phiên bản resolve ở hôm nay, có thể khác với phiên bản bạn từng test cách đây vài tháng. Hãy install, chạy app và kiểm tra các luồng chính trước khi commit.',
     notes: {
       'none-found': 'không có lockfile trong project này — đã tìm {names}',
     },

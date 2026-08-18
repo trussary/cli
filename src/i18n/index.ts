@@ -43,6 +43,22 @@ export function t(key: string, vars: Record<string, string | number> | undefined
   return interpolate(resolved ?? key, vars);
 }
 
+/**
+ * The optional fix-block copy. Returns undefined rather than a raw key when a
+ * rule has nothing to say, so the renderer can leave the heading out entirely.
+ */
+export function ruleExtra(
+  ruleId: string,
+  field: 'beforeApplying' | 'doNotApplyIf',
+  vars: Record<string, string | number> | undefined,
+  locale: Locale,
+): string | undefined {
+  const bundle = ruleBundles[ruleId];
+  if (!bundle) return undefined;
+  const value = bundle[locale][field] ?? bundle.en[field];
+  return value ? interpolate(value, vars) : undefined;
+}
+
 export function tm(msg: Msg, locale: Locale): string {
   return t(msg.key, msg.vars, locale);
 }

@@ -7,6 +7,7 @@ export const bundle: RuleBundle = {
     how: 'Update the package to a version outside the affected range (`npm install {package}@latest`), then run your app and click through the main flows to confirm nothing broke. If no fixed version exists yet, the advisory at {url} says what to do instead.',
     check: 'Run `npm audit` in your project folder. Anything reported as "critical" is what this check found — you are looking for {package}.',
     fixedWhen: '`npm audit` reports no critical advisories, your lockfile records the updated version, and the updated app is deployed — a fix that only exists on your machine is not deployed.',
+    beforeApplying: 'A fixed version can be a major release with breaking changes. Update, run the app, and click through your main flows before you deploy — read the package’s changelog if the version number jumped.',
   },
   vi: {
     title: 'Một package bạn đang dùng có lỗ hổng bảo mật critical đã được công bố',
@@ -14,5 +15,6 @@ export const bundle: RuleBundle = {
     how: 'Cập nhật package lên phiên bản ngoài khoảng bị ảnh hưởng (`npm install {package}@latest`), rồi chạy app và bấm thử các luồng chính để chắc là không vỡ gì. Nếu chưa có bản vá, advisory ở {url} sẽ nói cần làm gì thay thế.',
     check: 'Chạy `npm audit` trong thư mục project. Những mục báo "critical" chính là thứ kiểm tra này tìm thấy — cụ thể ở đây là {package}.',
     fixedWhen: '`npm audit` không còn advisory critical nào, lockfile đã ghi phiên bản mới, và bản app đã cập nhật được deploy — bản vá chỉ nằm ở máy bạn thì chưa tính là đã sửa.',
+    beforeApplying: 'Phiên bản đã vá có thể là bản major kèm breaking change. Hãy cập nhật, chạy app và bấm thử các luồng chính trước khi deploy — nếu số phiên bản nhảy nhiều thì đọc changelog của package.',
   },
 };
