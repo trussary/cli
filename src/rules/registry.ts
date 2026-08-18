@@ -12,6 +12,13 @@ import { uploadNoLimits } from './data-access/upload-no-limits.js';
 import { clientSideOnlyAuth } from './auth/client-side-only-auth.js';
 import { apiRouteNoSession } from './auth/api-route-no-session.js';
 import { adminRouteUnprotected } from './auth/admin-route-unprotected.js';
+import { jwtWeakSecret } from './auth/jwt-weak-secret.js';
+import { llmProxyOpen } from './money-abuse/llm-proxy-open.js';
+import { stripeWebhookUnverified } from './money-abuse/stripe-webhook-unverified.js';
+import { noRateLimitAuth } from './money-abuse/no-rate-limit-auth.js';
+import { sqlStringInterpolation } from './input/sql-string-interpolation.js';
+import { writeEndpointNoValidation } from './input/write-endpoint-no-validation.js';
+import { lockfileMissing } from './deploy/lockfile-missing.js';
 
 /**
  * The rule catalog. Adding a rule: one import + one line here,
@@ -35,6 +42,15 @@ export const rules: Rule[] = [
   clientSideOnlyAuth,
   apiRouteNoSession,
   adminRouteUnprotected,
+  jwtWeakSecret,
+  // money-abuse
+  llmProxyOpen,
+  stripeWebhookUnverified,
+  noRateLimitAuth,
+  // input
+  sqlStringInterpolation,
+  writeEndpointNoValidation,
+  lockfileMissing,
 ];
 
 export const knownRuleIds: ReadonlySet<string> = new Set(rules.map((r) => r.id));

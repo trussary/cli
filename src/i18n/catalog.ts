@@ -12,6 +12,13 @@ import { bundle as uploadNoLimits } from './rules/upload-no-limits.js';
 import { bundle as clientSideOnlyAuth } from './rules/client-side-only-auth.js';
 import { bundle as apiRouteNoSession } from './rules/api-route-no-session.js';
 import { bundle as adminRouteUnprotected } from './rules/admin-route-unprotected.js';
+import { bundle as jwtWeakSecret } from './rules/jwt-weak-secret.js';
+import { bundle as llmProxyOpen } from './rules/llm-proxy-open.js';
+import { bundle as stripeWebhookUnverified } from './rules/stripe-webhook-unverified.js';
+import { bundle as noRateLimitAuth } from './rules/no-rate-limit-auth.js';
+import { bundle as sqlStringInterpolation } from './rules/sql-string-interpolation.js';
+import { bundle as writeEndpointNoValidation } from './rules/write-endpoint-no-validation.js';
+import { bundle as lockfileMissing } from './rules/lockfile-missing.js';
 
 /**
  * Every rule's message bundle, keyed by rule id.
@@ -31,4 +38,11 @@ export const ruleBundles: Record<string, RuleBundle> = {
   'client-side-only-auth': clientSideOnlyAuth,
   'api-route-no-session': apiRouteNoSession,
   'admin-route-unprotected': adminRouteUnprotected,
+  'jwt-weak-secret': jwtWeakSecret,
+  'llm-proxy-open': llmProxyOpen,
+  'stripe-webhook-unverified': stripeWebhookUnverified,
+  'no-rate-limit-auth': noRateLimitAuth,
+  'sql-string-interpolation': sqlStringInterpolation,
+  'write-endpoint-no-validation': writeEndpointNoValidation,
+  'lockfile-missing': lockfileMissing,
 };

@@ -1,13 +1,21 @@
 import { execFileSync } from 'node:child_process';
 import type { DetectedFinding, Rule } from '../types.js';
+import { isPlaceholderSecret, SECRET_PATTERNS } from '../helpers/secret-patterns.js';
 
 const ENV_FILE = /(^|\/)\.env(\.local|\.production|\.development)?$/;
 
 /** .env.example / .env.sample are meant to be committed — only flag real values inside. */
 const EXAMPLE_ENV = /(^|\/)\.env\.(example|sample|template)$/;
 
-const LOOKS_LIKE_REAL_VALUE =
-  /^(?!#)[A-Z0-9_]+\s*=\s*['"]?(sk_live_|sk-ant-|sk-proj-|whsec_|AKIA|ghp_|eyJ[A-Za-z0-9_-]{20,})/;
+/** A committed template holding a real key, not a description of one. */
+function looksLikeRealValue(line: string): boolean {
+  if (/^\s*#/.test(line)) return false;
+  for (const pattern of SECRET_PATTERNS) {
+    const m = pattern.regex.exec(line);
+    if (m && !isPlaceholderSecret(m[0])) return true;
+  }
+  return false;
+}
 
 function gitTrackedFiles(root: string): Set<string> | undefined {
   try {
@@ -70,7 +78,7 @@ export const envCommittedToGit: Rule = {
       if (EXAMPLE_ENV.test(base)) {
         const lines = ctx.files.lines(base);
         for (let i = 0; i < lines.length; i++) {
-          if (LOOKS_LIKE_REAL_VALUE.test(lines[i] as string)) {
+          if (looksLikeRealValue(lines[i] as string)) {
             out.push({
               severity: 'critical',
               confidence: 'likely',

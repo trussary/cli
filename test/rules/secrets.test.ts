@@ -22,7 +22,7 @@ describe('secrets-in-client-bundle', () => {
     });
     for (const f of findings) {
       if (f.evidence.kind !== 'file') continue;
-      expect(f.evidence.excerpt).not.toContain('FAKEFIXTUREaaaaBBBBccccDDDDeeeeFFFFgggg0011');
+      expect(f.evidence.excerpt).not.toContain('9xQv2LmTn4Rb8Kd6Wc1Ye3Zh5Ug7Aj0PfSd');
       expect(f.evidence.excerpt).toContain('redacted');
     }
   });

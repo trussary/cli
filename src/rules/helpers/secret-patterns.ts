@@ -50,3 +50,15 @@ export const KNOWN_PUBLIC_ENV_NAMES = new Set([
 
 /** Supabase anon-role JWT (contains base64url "anon" role claim) — public by design. */
 export const SUPABASE_ANON_JWT = /\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]*YW5vbi[A-Za-z0-9_-]*\.[A-Za-z0-9_-]{10,}/;
+
+/**
+ * Values shaped like a key but filled in with instructions to the reader.
+ * Template files are full of these, and flagging them teaches people that the
+ * tool does not read what it is looking at.
+ */
+export const PLACEHOLDER_VALUE =
+  /(replace[_-]?me|your[_-]?(?:key|secret|token|value|project)|placeholder|example|change[_-]?me|xxxx+|todo|dummy|<[^>]+>|\.\.\.|_here$)/i;
+
+export function isPlaceholderSecret(value: string): boolean {
+  return PLACEHOLDER_VALUE.test(value);
+}

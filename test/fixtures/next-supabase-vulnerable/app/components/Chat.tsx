@@ -1,6 +1,6 @@
 'use client';
 // Intentionally vulnerable fixture — the key below is fake.
-const OPENAI_KEY = 'sk-FAKEFIXTUREaaaaBBBBccccDDDDeeeeFFFFgggg0011';
+const OPENAI_KEY = 'sk-proj-9xQv2LmTn4Rb8Kd6Wc1Ye3Zh5Ug7Aj0PfSd';
 
 export async function askModel(prompt: string) {
   const res = await fetch('https://api.openai.com/v1/chat/completions', {

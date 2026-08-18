@@ -1,0 +1,14 @@
+{
+  "name": "false-positive-corpus",
+  "private": true,
+  "description": "Known-safe code that a careless rule would flag. Every file here must produce zero findings.",
+  "dependencies": {
+    "next": "15.0.0",
+    "react": "19.0.0",
+    "@supabase/supabase-js": "2.45.0",
+    "stripe": "16.0.0",
+    "express": "4.19.2",
+    "zod": "3.23.8",
+    "@upstash/ratelimit": "2.0.1"
+  }
+}
