@@ -14,6 +14,14 @@ export interface RuleMessages {
   check: string;
   /** A verifiable end state, not an action. */
   fixedWhen: string;
+  /**
+   * What the fix will disturb — sessions dropped, integrations to update,
+   * a page that goes blank until a policy is written. Optional, and present
+   * exactly where a fix has a cost worth knowing before starting.
+   */
+  beforeApplying?: string;
+  /** When this advice is the wrong advice for this project. Optional. */
+  doNotApplyIf?: string;
   /** Extra keys (absence-evidence notes etc.), resolved as `<rule-id>.<key>`. */
   notes?: Record<string, string>;
 }

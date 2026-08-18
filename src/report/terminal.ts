@@ -48,7 +48,7 @@ export interface TerminalOptions {
 export function renderTerminal(result: ScanResult, opts: TerminalOptions): string {
   const { locale } = opts;
   const out: string[] = [];
-  const label = (key: string) => pc.dim(t(key, undefined, locale).padEnd(12));
+  const label = (key: string) => pc.dim(t(key, undefined, locale));
 
   out.push('');
   out.push(pc.bold(`trussary ${result.tool.version}`) + pc.dim(`  ·  ${toNative(result.root)}`));
@@ -75,11 +75,18 @@ export function renderTerminal(result: ScanResult, opts: TerminalOptions): strin
       `${sevColor(f.severity, `● ${SEV_LABEL[f.severity]}`)} ${pc.dim(`· ${f.confidence}`)}  ${pc.dim(f.id)}`,
     );
     out.push(`  ${pc.bold(tm(f.title, locale))}`);
-    out.push(`  ${label('engine.why')} ${tm(f.whyItMatters, locale)}`);
-    out.push(`  ${label('engine.evidence')} ${renderEvidence(f.evidence, locale)}`);
-    out.push(`  ${label('engine.check')} ${tm(f.checkWhetherThisIsYou, locale)}`);
-    out.push(`  ${label('engine.fixed-when')} ${tm(f.fixedWhen, locale)}`);
-    out.push(`  ${label('engine.how')} ${tm(f.howToFix, locale)}`);
+    // Label above, text below: paragraph-length values and two languages with
+    // very different label lengths make a padded column unreadable.
+    out.push(`  ${label('engine.evidence')}`);
+    out.push(`    ${renderEvidence(f.evidence, locale)}`);
+    out.push(`  ${label('engine.why')}`);
+    out.push(`    ${tm(f.whyItMatters, locale)}`);
+    out.push(`  ${label('engine.check')}`);
+    out.push(`    ${tm(f.checkWhetherThisIsYou, locale)}`);
+    out.push(`  ${label('engine.fixed-when')}`);
+    out.push(`    ${tm(f.fixedWhen, locale)}`);
+    out.push(`  ${label('engine.how')}`);
+    out.push(`    ${tm(f.howToFix, locale)}`);
     if (f.confidence === 'possible') {
       out.push(`  ${pc.dim(t('engine.possible-note', undefined, locale))}`);
     }

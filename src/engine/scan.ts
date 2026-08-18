@@ -52,7 +52,9 @@ function finalize(rule: Rule, detected: DetectedFinding, config: TrussaryConfig)
     },
     fixedWhen: { key: `${rule.id}.fixedWhen`, ...(detected.vars ? { vars: detected.vars } : {}) },
     evidence: detected.evidence,
-    live: rule.inputs.live === true,
+    // For a liveOptional rule, only the findings that actually came from the
+    // network are live ones.
+    live: rule.inputs.live === true || detected.evidence.kind === 'http',
   };
   if (detected.stack) finding.stack = detected.stack;
   return finding;
@@ -71,7 +73,7 @@ export async function runScan(opts: RunScanOptions): Promise<ScanRunResult> {
       scan: ctx,
       files: ctx.files,
       http(): SafeHttpClient {
-        if (!rule.inputs.live) {
+        if (!rule.inputs.live && !rule.inputs.liveOptional) {
           throw new Error(`rule ${rule.id} did not declare inputs.live but requested http()`);
         }
         if (!ctx.liveCheckAuthorized || !liveClient) {

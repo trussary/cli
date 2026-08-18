@@ -1,0 +1,18 @@
+{
+  "$comment": "Copy to .trussaryrc. JSON only. Flags on the command line beat this file; this file beats the defaults.",
+
+  "ignore": [
+    "vendor/**",
+    "legacy/**"
+  ],
+
+  "minSeverity": "high",
+
+  "rules": {
+    "no-rate-limit-auth": false,
+
+    "upload-no-limits": { "severity": "low" },
+
+    "client-side-only-auth": { "minConfidence": "likely" }
+  }
+}

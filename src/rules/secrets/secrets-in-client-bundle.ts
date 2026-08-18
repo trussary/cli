@@ -1,7 +1,8 @@
 import type { DetectedFinding, Rule } from '../types.js';
 import { shannon } from '../helpers/entropy.js';
-import { redactLine } from '../helpers/redact.js';
+import { redactLine, trimExcerpt } from '../helpers/redact.js';
 import {
+  isPlaceholderSecret,
   KNOWN_PUBLIC_ENV_NAMES,
   KNOWN_PUBLIC_PREFIXES,
   SECRET_PATTERNS,
@@ -64,7 +65,7 @@ export const secretsInClientBundle: Rule = {
         let matched = false;
         for (const pat of SECRET_PATTERNS) {
           const m = pat.regex.exec(text);
-          if (m && !isKnownPublic(text, m[0])) {
+          if (m && !isKnownPublic(text, m[0]) && !isPlaceholderSecret(m[0])) {
             out.push({
               severity: 'critical',
               confidence: 'certain',
@@ -94,9 +95,13 @@ export const secretsInClientBundle: Rule = {
               path: file.path,
               line: i + 1,
               column: pub.index,
-              excerpt: redactLine(text, pub[0]),
+              excerpt: trimExcerpt(text),
             },
-            vars: { provider: pub[1] as string, file: file.path, line: i + 1 },
+            vars: {
+              provider: (pub[1] as string).replace(/_KEY$/, ''),
+              file: file.path,
+              line: i + 1,
+            },
           });
           continue;
         }

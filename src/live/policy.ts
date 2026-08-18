@@ -26,6 +26,11 @@ export const FIXED_PATHS = [
 
 export const MAX_BODY_BYTES = 256 * 1024;
 
+/** True for the fixed diagnostic paths, which are exempt from robots.txt. */
+export function isFixedPath(pathname: string): boolean {
+  return (FIXED_PATHS as readonly string[]).includes(pathname);
+}
+
 /** True when `url` stays on the asserted origin or an explicitly allowed extra origin. */
 export function isAllowedTarget(url: URL, assertedOrigin: string, extraOrigins: Set<string>): boolean {
   return url.origin === assertedOrigin || extraOrigins.has(url.origin);

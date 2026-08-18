@@ -6,6 +6,8 @@ import { buildScanContext } from '../engine/context.js';
 import { runScan } from '../engine/scan.js';
 import { isLocale, t, type Locale } from '../i18n/index.js';
 import { createLiveSession } from '../live/client.js';
+import { requestConsent } from '../live/consent.js';
+import { discoverSupabaseProject } from '../live/discovery.js';
 import { countBySeverity, JSON_SCHEMA_VERSION, type ScanResult } from '../report/model.js';
 import { exitCodeFor, EXIT_LIVE_NETWORK_FAILED, EXIT_USAGE } from '../report/exit-code.js';
 import { renderJson } from '../report/json.js';
@@ -47,20 +49,17 @@ export async function checkCommand(flags: CheckFlags): Promise<number> {
     }
     minSeverity = flags.minSeverity;
   }
-  if (flags.url) {
-    try {
-      const u = new URL(flags.url);
-      if (u.protocol !== 'http:' && u.protocol !== 'https:') throw new Error('bad protocol');
-    } catch {
-      process.stderr.write(`--url must be an http(s) URL, got "${flags.url}"\n`);
-      return EXIT_USAGE;
-    }
+  // Consent is the only key to the network: nothing below can open a socket at
+  // a site without the LiveConsent this call either grants or refuses.
+  const consent = requestConsent(flags.url, flags.iOwnThisSite);
+  if (!consent.ok && consent.reason === 'bad-url') {
+    process.stderr.write(`--url must be an http(s) URL, got "${flags.url}"\n`);
+    return EXIT_USAGE;
   }
-
-  const liveAuthorized = Boolean(flags.url) && flags.iOwnThisSite;
-  if (flags.url && !flags.iOwnThisSite) {
+  if (!consent.ok && consent.reason === 'not-asserted') {
     process.stderr.write(pc.yellow(t('engine.live-skipped', undefined, locale)) + '\n');
   }
+  const liveAuthorized = consent.ok;
 
   // --- config + context -----------------------------------------------------
   const config = loadConfig(flags.path, knownRuleIds);
@@ -68,13 +67,20 @@ export async function checkCommand(flags: CheckFlags): Promise<number> {
     root: flags.path,
     locale,
     extraIgnores: config.ignore,
-    ...(flags.url && liveAuthorized ? { targetUrl: flags.url } : {}),
+    ...(consent.ok ? { targetUrl: consent.consent.url } : {}),
     liveCheckAuthorized: liveAuthorized,
     offline: flags.offline,
   });
 
   // --- live session (only when authorized) ----------------------------------
-  const liveSession = liveAuthorized && flags.url ? createLiveSession(flags.url, ctx.budget) : undefined;
+  const liveSession = consent.ok ? createLiveSession(consent.consent, ctx.budget) : undefined;
+  if (liveSession) {
+    // The app's own Supabase project is the one extra origin the policy allows,
+    // and it is read from the app's own source rather than configured.
+    const project = discoverSupabaseProject(ctx.files);
+    if (project) liveSession.allowExtraOrigin(project.origin);
+    await liveSession.primeRobots();
+  }
 
   // --- scan -----------------------------------------------------------------
   const { findings, ruleErrors } = await runScan({
@@ -91,8 +97,8 @@ export async function checkCommand(flags: CheckFlags): Promise<number> {
     tool: { name: 'trussary', version: VERSION },
     scannedAt: new Date().toISOString(),
     root: toPosix(ctx.root),
-    ...(liveAuthorized && flags.url
-      ? { target: { url: flags.url, ownershipAsserted: true as const } }
+    ...(consent.ok
+      ? { target: { url: consent.consent.url, ownershipAsserted: true as const } }
       : {}),
     stacks: [...ctx.stacks].sort(),
     locale,

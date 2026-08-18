@@ -26,7 +26,9 @@ export function detectStacks(files: FileSet, pkg: PackageJsonLike | undefined): 
     stacks.add('supabase');
   }
 
-  if (files.has('vercel.json') || files.list('.vercel/**').length > 0) stacks.add('vercel');
+  // .vercel/ is never walked (it is generated output), so it cannot be the
+  // signal here — vercel.json or the CLI in devDependencies is.
+  if (files.has('vercel.json') || d['vercel'] || files.has('.vercelignore')) stacks.add('vercel');
 
   if (d['express']) stacks.add('express');
 

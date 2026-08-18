@@ -1,13 +1,22 @@
-import type { LiveBudget, SafeHttpClient, SafeHttpResponse } from '../rules/types.js';
+import type {
+  LiveBudget,
+  SafeHttpClient,
+  SafeHttpResponse,
+  SafeRequestOptions,
+} from '../rules/types.js';
 import type { LiveCheckReceipt } from '../report/model.js';
-import { isAllowedTarget, MAX_BODY_BYTES, USER_AGENT } from './policy.js';
+import type { LiveConsent } from './consent.js';
+import { isAllowedTarget, isFixedPath, MAX_BODY_BYTES, USER_AGENT } from './policy.js';
+import { parseRobots, type RobotsRules } from './robots.js';
 
 export interface LiveSession {
   client: SafeHttpClient;
   receipt(): LiveCheckReceipt;
   networkFailed(): boolean;
-  /** Rules may register the app's own Supabase project origin discovered in source. */
+  /** The app's own Supabase project origin, discovered in its own source. */
   allowExtraOrigin(origin: string): void;
+  /** Fetch robots.txt once, before any optional probe. */
+  primeRobots(): Promise<void>;
 }
 
 class BudgetExceeded extends Error {
@@ -16,27 +25,42 @@ class BudgetExceeded extends Error {
   }
 }
 
-export function createLiveSession(targetUrl: string, budget: LiveBudget): LiveSession {
-  const assertedOrigin = new URL(targetUrl).origin;
+class RobotsDisallowed extends Error {
+  constructor(path: string) {
+    super(`robots.txt disallows ${path} — not probed`);
+  }
+}
+
+export function createLiveSession(consent: LiveConsent, budget: LiveBudget): LiveSession {
+  const assertedOrigin = consent.origin;
   const extraOrigins = new Set<string>();
-  const assertedAt = new Date().toISOString();
   const pathsProbed: string[] = [];
   const startedAt = Date.now();
 
   let requestsMade = 0;
   let lastRequestAt = 0;
-  let consecutiveNetworkErrors = 0;
+  let networkErrors = 0;
   let anySuccess = false;
+  let robots: RobotsRules | undefined;
+  let robotsFetched = false;
 
-  async function request(method: 'GET' | 'HEAD', rawUrl: string): Promise<SafeHttpResponse> {
+  async function request(
+    method: 'GET' | 'HEAD',
+    rawUrl: string,
+    opts: SafeRequestOptions & { anonKey?: string } = {},
+  ): Promise<SafeHttpResponse> {
     const url = new URL(rawUrl, assertedOrigin);
     if (!isAllowedTarget(url, assertedOrigin, extraOrigins)) {
       throw new Error(`live check refused off-target url ${url.origin}`);
     }
+    // Optional probes obey robots.txt; the fixed diagnostic paths do not.
+    if (opts.optional && !isFixedPath(url.pathname) && robots && !robots.allows(url.pathname)) {
+      throw new RobotsDisallowed(url.pathname);
+    }
     if (requestsMade >= budget.maxTotalRequests) throw new BudgetExceeded('request cap');
     if (Date.now() - startedAt > budget.totalWallClockMs) throw new BudgetExceeded('wall clock');
 
-    // Rate limit: single lane, min interval between requests.
+    // Rate limit: a single lane with a minimum gap between requests.
     const minInterval = 1000 / budget.maxRequestsPerSecond;
     const wait = lastRequestAt + minInterval - Date.now();
     if (wait > 0) await new Promise((r) => setTimeout(r, wait));
@@ -44,11 +68,19 @@ export function createLiveSession(targetUrl: string, budget: LiveBudget): LiveSe
     requestsMade++;
     pathsProbed.push(`${method} ${url.pathname}${url.search}`);
 
+    const headers: Record<string, string> = { 'user-agent': USER_AGENT, accept: '*/*' };
+    if (opts.anonKey) {
+      // The app's own public key, sent to the app's own project. Nothing else
+      // in this tool ever attaches a credential to a request.
+      headers['apikey'] = opts.anonKey;
+      headers['authorization'] = `Bearer ${opts.anonKey}`;
+    }
+
     try {
       const res = await fetch(url, {
         method,
-        redirect: 'manual', // never follow redirects (they could leave the asserted origin)
-        headers: { 'user-agent': USER_AGENT, accept: '*/*' },
+        redirect: 'manual', // a redirect could leave the origin the user asserted
+        headers,
         signal: AbortSignal.timeout(budget.perRequestTimeoutMs),
       });
 
@@ -72,40 +104,56 @@ export function createLiveSession(targetUrl: string, budget: LiveBudget): LiveSe
         body = Buffer.concat(chunks).toString('utf8').slice(0, MAX_BODY_BYTES);
       }
 
-      const headers: Record<string, string> = {};
+      const responseHeaders: Record<string, string> = {};
       res.headers.forEach((v, k) => {
-        headers[k.toLowerCase()] = v;
+        responseHeaders[k.toLowerCase()] = v;
       });
 
       anySuccess = true;
-      consecutiveNetworkErrors = 0;
-      return { url: url.toString(), status: res.status, headers, body, ok: res.ok };
+      return { url: url.toString(), status: res.status, headers: responseHeaders, body, ok: res.ok };
     } catch (err) {
-      consecutiveNetworkErrors++;
+      networkErrors++;
       throw err;
     }
   }
 
   return {
     client: {
-      get: (u) => request('GET', u),
-      head: (u) => request('HEAD', u),
+      get: (u, opts) => request('GET', u, opts ?? {}),
+      head: (u, opts) => request('HEAD', u, opts ?? {}),
+      getWithAnonKey: (u, anonKey) => request('GET', u, { anonKey }),
+      targetOrigin: () => assertedOrigin,
     },
+
+    async primeRobots(): Promise<void> {
+      if (robotsFetched) return;
+      robotsFetched = true;
+      try {
+        const res = await request('GET', '/robots.txt');
+        if (res.ok) robots = parseRobots(res.body);
+      } catch {
+        // No robots.txt, or unreachable: the fixed allowlist still applies and
+        // optional probes stay conservative by having nothing to check against.
+      }
+    },
+
     receipt(): LiveCheckReceipt {
       return {
-        url: targetUrl,
+        url: consent.url,
         ownershipAsserted: true,
-        assertedAt,
+        assertedAt: consent.assertedAt,
         userAgent: USER_AGENT,
         requestsMade,
         pathsProbed,
         robotsRespected: true,
       };
     },
+
     networkFailed(): boolean {
-      // "Network failed" (exit 3) = we tried and never reached the site at all.
-      return requestsMade > 0 && !anySuccess && consecutiveNetworkErrors > 0;
+      // Exit code 3 means: we tried and never reached the site at all.
+      return requestsMade > 0 && !anySuccess && networkErrors > 0;
     },
+
     allowExtraOrigin(origin: string): void {
       extraOrigins.add(origin);
     },

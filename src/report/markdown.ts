@@ -1,5 +1,5 @@
 import type { Evidence, Finding, Severity } from '../rules/types.js';
-import { t, tm, type Locale } from '../i18n/index.js';
+import { ruleExtra, t, tm, type Locale } from '../i18n/index.js';
 import type { ScanResult } from './model.js';
 
 const SEV_LABEL: Record<Severity, string> = {
@@ -54,6 +54,17 @@ export function renderMarkdown(result: ScanResult, locale: Locale): string {
     out.push('');
     out.push(tm(f.howToFix, locale));
     out.push('');
+
+    const before = ruleExtra(f.id, 'beforeApplying', f.howToFix.vars, locale);
+    if (before) {
+      out.push(`**${t('engine.before-applying', undefined, locale)}** ${before}`);
+      out.push('');
+    }
+    const doNot = ruleExtra(f.id, 'doNotApplyIf', f.howToFix.vars, locale);
+    if (doNot) {
+      out.push(`**${t('engine.do-not-apply', undefined, locale)}** ${doNot}`);
+      out.push('');
+    }
     if (f.confidence === 'possible') {
       out.push(`> ${t('engine.possible-note', undefined, locale)}`);
       out.push('');
