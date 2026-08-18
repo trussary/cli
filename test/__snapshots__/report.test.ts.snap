@@ -109,7 +109,7 @@ Run an install once locally and commit the lockfile it produces (package-lock.js
 
 ## [MEDIUM · likely] Your app tells visitors more about itself than it should
 
-**Why it matters** In src/server.js (line 12) we found error-details: development behaviour that stays switched on in a deployed app. Error details name your files, your libraries and often your database — a stranger reading them learns exactly what to try next.
+**Why it matters** The evidence above is development behaviour that stays switched on in a deployed app. Error details name your files, your libraries and often your database — a stranger reading them learns exactly what to try next.
 
 **Evidence** \`src/server.js:12\` — res.status(500).json({ error: err.stack });
 
@@ -265,7 +265,7 @@ Nhận diện: express
   Bằng chứng
     src\\server.js:12  →  res.status(500).json({ error: err.stack });
   Vì sao quan trọng
-    Trong src/server.js (dòng 12) chúng tôi thấy error-details: hành vi dành cho development nhưng vẫn bật khi app đã deploy. Chi tiết lỗi nêu ra tên file, thư viện và thường cả database của bạn — người lạ đọc được là biết ngay nên thử gì tiếp.
+    Bằng chứng ở trên là hành vi dành cho development nhưng vẫn bật khi app đã deploy. Chi tiết lỗi nêu ra tên file, thư viện và thường cả database của bạn — người lạ đọc được là biết ngay nên thử gì tiếp.
   Tự kiểm tra xem có đúng không
     Trên site đang chạy, thử mở một trang hoặc một API path không tồn tại, hoặc gửi form với dữ liệu sai rõ ràng. Nếu phản hồi có đường dẫn file, số dòng hay tên thư viện thì đó chính là chỗ rò rỉ.
   Được coi là đã sửa khi
@@ -408,7 +408,7 @@ Detected: express
   Evidence
     src\\server.js:12  →  res.status(500).json({ error: err.stack });
   Why it matters
-    In src/server.js (line 12) we found error-details: development behaviour that stays switched on in a deployed app. Error details name your files, your libraries and often your database — a stranger reading them learns exactly what to try next.
+    The evidence above is development behaviour that stays switched on in a deployed app. Error details name your files, your libraries and often your database — a stranger reading them learns exactly what to try next.
   Check whether this is you
     On your live site, ask for a page or an API path that does not exist, or submit a form with obviously wrong data. If what comes back mentions file paths, line numbers, or a library name, that is the leak.
   Fixed when

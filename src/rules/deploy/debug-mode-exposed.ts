@@ -23,14 +23,27 @@ const DEBUG_FLAG_ON =
 /** Vite/Next/Express dev-only error pages wired unconditionally. */
 const DEV_ERROR_MIDDLEWARE = /\brequire\(['"]errorhandler['"]\)|\bfrom\s+['"]errorhandler['"]/;
 
+/**
+ * What a development build looks like from the outside: a hot-reload client,
+ * a development build id, or a framework debugger page. These are observed in
+ * the response, so they say 'certain' where the file branches say 'likely'.
+ */
+const LIVE_DEBUG_MARKERS: { marker: RegExp; kind: string }[] = [
+  { marker: /@vite\/client|__vite_plugin_react_preamble/, kind: 'a Vite development build' },
+  { marker: /webpack-hmr|react-refresh|__webpack_hmr/, kind: 'a hot-reload development build' },
+  { marker: /"buildId"\s*:\s*"development"/, kind: 'a Next.js development build' },
+  { marker: /Traceback \(most recent call last\)|Werkzeug|Whoops\b/, kind: 'a debugger error page' },
+  { marker: /\bat\s+\S+\s+\([A-Za-z]?:?[/\\][^)]{6,}:\d+:\d+\)/, kind: 'a stack trace' },
+];
+
 export const debugModeExposed: Rule = {
   id: 'debug-mode-exposed',
   ruleClass: 'deploy',
   defaultSeverity: 'medium',
-  maxConfidence: 'likely',
-  inputs: { globs: SOURCE_GLOBS },
+  maxConfidence: 'certain', // the live branch observes; the file branches claim only 'likely'
+  inputs: { globs: SOURCE_GLOBS, liveOptional: true },
 
-  detect(ctx): DetectedFinding[] {
+  async detect(ctx): Promise<DetectedFinding[]> {
     const out: DetectedFinding[] = [];
 
     for (const file of ctx.files.list(SOURCE_GLOBS)) {
@@ -53,15 +66,33 @@ export const debugModeExposed: Rule = {
             line: i + 1,
             excerpt: trimExcerpt(text),
           },
-          vars: {
-            file: file.path,
-            line: i + 1,
-            kind: trace ? 'error-details' : 'debug-switch',
-          },
         });
         break; // one per file — the pattern, not every instance of it
       }
     }
+
+    // The same question asked of the deployed site, when the user authorised it.
+    if (ctx.scan.liveCheckAuthorized) {
+      try {
+        const res = await ctx.http().get('/');
+        const hit = LIVE_DEBUG_MARKERS.find(({ marker }) => marker.test(res.body));
+        if (hit) {
+          out.push({
+            confidence: 'certain',
+            evidence: {
+              kind: 'http',
+              url: res.url,
+              method: 'GET',
+              status: res.status,
+              snippet: hit.kind,
+            },
+          });
+        }
+      } catch {
+        // Unreachable site: the static findings above still stand.
+      }
+    }
+
     return out;
   },
 };

@@ -68,8 +68,14 @@ export interface RuleInputs {
   globs?: string[];
   /** Only run when one of these stacks was detected. */
   stacks?: Stack[];
-  /** Requires --url plus --i-own-this-site. */
+  /** Requires --url plus --i-own-this-site; the rule does not run without them. */
   live?: boolean;
+  /**
+   * The rule always runs statically, and asks the live site as well when the
+   * user authorised it. Same gate, same walled garden — the difference is that
+   * a missing --url costs the extra evidence, not the whole check.
+   */
+  liveOptional?: boolean;
 }
 
 export interface DetectedFinding {

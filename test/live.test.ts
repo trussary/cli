@@ -40,8 +40,9 @@ beforeAll(async () => {
       res.end('User-agent: *\nDisallow: /private\n');
       return;
     }
+    // Careless all the way down: this is a development build, deployed.
     res.writeHead(200, { 'content-type': 'text/html' });
-    res.end('<!doctype html><title>careless</title>');
+    res.end('<!doctype html><title>careless</title><script src="/@vite/client"></script>');
   });
 
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
@@ -143,6 +144,55 @@ describe('live checks with --i-own-this-site', () => {
 
     expect(session?.receipt().pathsProbed).toContain('GET /.env');
     expect(session?.receipt().userAgent).toContain('trussary/');
+  });
+});
+
+describe('a rule that is live-optional', () => {
+  it('runs statically with no authorisation, and never touches the network', async () => {
+    hits.length = 0;
+    const consent = requestConsent(origin, false);
+    const ctx = buildScanContext({
+      root: path.join(FIXTURES, 'express-vulnerable'),
+      locale: 'en',
+      offline: true,
+      liveCheckAuthorized: consent.ok,
+    });
+    const { findings } = await runScan({
+      ctx,
+      rules: rules.filter((r) => r.id === 'debug-mode-exposed'),
+      config: EMPTY_CONFIG,
+    });
+
+    expect(hits).toEqual([]);
+    expect(findings.length).toBeGreaterThan(0);
+    expect(findings.every((f) => f.evidence.kind === 'file')).toBe(true);
+    expect(findings.every((f) => f.confidence === 'likely')).toBe(true);
+  });
+
+  it('adds an observed finding when the live site serves a development build', async () => {
+    hits.length = 0;
+    const consent = requestConsent(origin, true);
+    if (!consent.ok) throw new Error('consent should have been granted');
+    const ctx = buildScanContext({
+      root: path.join(FIXTURES, 'express-vulnerable'),
+      locale: 'en',
+      offline: true,
+      liveCheckAuthorized: true,
+      targetUrl: consent.consent.url,
+    });
+    const session = createLiveSession(consent.consent, ctx.budget);
+    const { findings } = await runScan({
+      ctx,
+      rules: rules.filter((r) => r.id === 'debug-mode-exposed'),
+      config: EMPTY_CONFIG,
+      liveClient: session.client,
+    });
+
+    const observed = findings.find((f) => f.evidence.kind === 'http');
+    expect(observed).toBeDefined();
+    expect(observed?.confidence).toBe('certain');
+    expect(observed?.live).toBe(true);
+    expect(hits.map((h) => h.url)).toEqual(['/']);
   });
 });
 
